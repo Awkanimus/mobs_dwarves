@@ -1,20 +1,30 @@
 --[[
-    Mobs Dwarves - Adds dwarves.
-    Copyright (C) 2018  Hamlet
+	Mobs Dwarves - Adds dwarves.
+	Copyright © 2018-2019 Hamlet <hamlatmesehub@riseup.net>
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	Licensed under the EUPL, Version 1.2 or – as soon they will be
+	approved by the European Commission – subsequent versions of the
+	EUPL (the "Licence");
+	You may not use this work except in compliance with the Licence.
+	You may obtain a copy of the Licence at:
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	https://joinup.ec.europa.eu/software/page/eupl
+	https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32017D0863
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	Unless required by applicable law or agreed to in writing,
+	software distributed under the Licence is distributed on an
+	"AS IS" basis,
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+	implied.
+	See the Licence for the specific language governing permissions
+	and limitations under the Licence.
+
 --]]
+
+
+-- Used for localization
+
+local S = minetest.get_translator("mobs_dwarves")
 
 
 --
@@ -26,13 +36,23 @@ if (mob_difficulty == nil) then
 	 mob_difficulty = 1
 end
 
+local show_nametags = minetest.settings:get_bool("dwarves_use_nametags")
+if (show_nametags == nil) then
+	show_nametags = false
+end
+
+local dig_ores = minetest.settings:get_bool("dwarves_dig_ores")
+if (dig_ores == nil) then
+	dig_ores = true
+end
+
 
 --
 -- Chat messages
 --
 
-local MESSAGE_1 = "Saluton "
-local MESSAGE_2 = ", mia nomo estas "
+local MESSAGE_1 = S("Saluton ")
+local MESSAGE_2 = S(", mia nomo estas ")
 
 
 --
@@ -67,7 +87,11 @@ local function random_class(self)
 	local class = math.random(1, 20)
 
 	if (class >= 1) and (class < 10) then
-		-- self.nametag = "Dwarf Miner"
+		if (show_nametags == true) then
+			self.nametag = S("Dwarf Miner")
+		else
+			self.nametag = ""
+		end
 		self.hp_min = 20 * mob_difficulty
 		self.hp_max = 35 * mob_difficulty
 
@@ -190,65 +214,67 @@ local function random_class(self)
 			"mobs_monster:mese_arrow"
 		}
 
-		if minetest.get_modpath("real_minerals") then
-			self.replace_what = {"default:stone_with_coal",
-				"default:stone_with_iron",
-				"default:stone_with_copper", "default:stone_with_tin",
-				"default:stone_with_mese", "default:stone_with_gold",
-				"default:stone_with_diamond",
-				"real_minerals:anthracite_in_default_stone",
-				"real_minerals:bauxite_in_default_stone",
-				"real_minerals:bismuthinite_in_default_stone",
-				"real_minerals:bituminous_coal_in_default_stone",
-				"real_minerals:cassiterite_in_default_stone",
-				"real_minerals:cinnabar_in_default_stone",
-				"real_minerals:cryolite_in_default_stone",
-				"real_minerals:galena_in_default_stone",
-				"real_minerals:garnierite_in_default_stone",
-				"real_minerals:graphite_in_default_stone",
-				"real_minerals:gypsum_in_default_stone",
-				"real_minerals:hematite_in_default_stone",
-				"real_minerals:jet_in_default_stone",
-				"real_minerals:kaolinite_in_default_stone",
-				"real_minerals:kimberlite_in_default_stone",
-				"real_minerals:lazurite_in_default_stone",
-				"real_minerals:lignite_in_default_stone",
-				"real_minerals:limonite_in_default_stone",
-				"real_minerals:magnetite_in_default_stone",
-				"real_minerals:malachite_in_default_stone",
-				"real_minerals:native_copper_in_default_stone",
-				"real_minerals:native_copper_in_desert_stone",
-				"real_minerals:native_gold_in_default_stone",
-				"real_minerals:native_gold_in_desert_stone",
-				"real_minerals:native_platinum_in_default_stone",
-				"real_minerals:native_silver_in_default_stone",
-				"real_minerals:olivine_in_default_stone",
-				"real_minerals:petrified_wood_in_default_stone",
-				"real_minerals:pitchblende_in_default_stone",
-				"real_minerals:saltpeter_in_default_stone",
-				"real_minerals:satin_spar_in_default_stone",
-				"real_minerals:selenite_in_default_stone",
-				"real_minerals:serpentine_in_default_stone",
-				"real_minerals:sphalerite_in_default_stone",
-				"real_minerals:sylvite_in_default_stone",
-				"real_minerals:tenorite_in_default_stone",
-				"real_minerals:tetrahedrite_in_default_stone",
-			}
-		else
-			self.replace_what = {"default:stone_with_coal",
-				"default:stone_with_iron",
-				"default:stone_with_copper", "default:stone_with_tin",
-				"default:stone_with_mese", "default:stone_with_gold",
-				"default:stone_with_diamond"
-			}
+		if (dig_ores == true) then
+			if minetest.get_modpath("real_minerals") then
+				self.replace_what = {"default:stone_with_coal",
+					"default:stone_with_iron",
+					"default:stone_with_copper", "default:stone_with_tin",
+					"default:stone_with_mese", "default:stone_with_gold",
+					"default:stone_with_diamond",
+					"real_minerals:anthracite_in_default_stone",
+					"real_minerals:bauxite_in_default_stone",
+					"real_minerals:bismuthinite_in_default_stone",
+					"real_minerals:bituminous_coal_in_default_stone",
+					"real_minerals:cassiterite_in_default_stone",
+					"real_minerals:cinnabar_in_default_stone",
+					"real_minerals:cryolite_in_default_stone",
+					"real_minerals:galena_in_default_stone",
+					"real_minerals:garnierite_in_default_stone",
+					"real_minerals:graphite_in_default_stone",
+					"real_minerals:gypsum_in_default_stone",
+					"real_minerals:hematite_in_default_stone",
+					"real_minerals:jet_in_default_stone",
+					"real_minerals:kaolinite_in_default_stone",
+					"real_minerals:kimberlite_in_default_stone",
+					"real_minerals:lazurite_in_default_stone",
+					"real_minerals:lignite_in_default_stone",
+					"real_minerals:limonite_in_default_stone",
+					"real_minerals:magnetite_in_default_stone",
+					"real_minerals:malachite_in_default_stone",
+					"real_minerals:native_copper_in_default_stone",
+					"real_minerals:native_copper_in_desert_stone",
+					"real_minerals:native_gold_in_default_stone",
+					"real_minerals:native_gold_in_desert_stone",
+					"real_minerals:native_platinum_in_default_stone",
+					"real_minerals:native_silver_in_default_stone",
+					"real_minerals:olivine_in_default_stone",
+					"real_minerals:petrified_wood_in_default_stone",
+					"real_minerals:pitchblende_in_default_stone",
+					"real_minerals:saltpeter_in_default_stone",
+					"real_minerals:satin_spar_in_default_stone",
+					"real_minerals:selenite_in_default_stone",
+					"real_minerals:serpentine_in_default_stone",
+					"real_minerals:sphalerite_in_default_stone",
+					"real_minerals:sylvite_in_default_stone",
+					"real_minerals:tenorite_in_default_stone",
+					"real_minerals:tetrahedrite_in_default_stone",
+				}
+			else
+				self.replace_what = {"default:stone_with_coal",
+					"default:stone_with_iron",
+					"default:stone_with_copper", "default:stone_with_tin",
+					"default:stone_with_mese", "default:stone_with_gold",
+					"default:stone_with_diamond"
+				}
+			end
+
+			self.replace_with = "default:cobble"
+			self.replace_rate = 4
+			self.replace_offset = -1
 		end
 
-		self.replace_with = "default:cobble"
-		self.replace_rate = 4
-		self.replace_offset = -1
-
 		self.object:set_properties({
-			-- nametag = self.nametag,
+			nametag = self.nametag,
 			hp_min = self.hp_min,
 			hp_max = self.hp_max,
 			damage = self.damage,
@@ -264,7 +290,11 @@ local function random_class(self)
 		})
 
 	elseif (class > 9) and (class < 15) then
-		-- self.nametag = "Dwarf Soldier"
+		if (show_nametags == true) then
+			self.nametag = S("Dwarf Soldier")
+		else
+			self.nametag = ""
+		end
 		self.hp_min = 35 * mob_difficulty
 		self.hp_max = 50 * mob_difficulty
 		self.armor = 85
@@ -393,13 +423,14 @@ local function random_class(self)
 		}
 
 		self.object:set_properties({
-			-- nametag = self.nametag,
+			nametag = self.nametag,
 			hp_min = self.hp_min,
 			hp_max = self.hp_max,
 			armor = self.armor,
 			walk_chance = self.walk_chance,
 			view_range = self.view_range,
 			damage = self.damage,
+			knock_back = false,
 			drops = self.drops,
 			class_and_tool = self.class_and_tool,
 			fear_height = self.fear_height,
@@ -411,7 +442,11 @@ local function random_class(self)
 		})
 
 	elseif (class > 14) and (class < 20) then
-		-- self.nametag = "Dwarf Marksman"
+		if (show_nametags == true) then
+			self.nametag = S("Dwarf Marksman")
+		else
+			self.nametag = ""
+		end
 		self.hp_min = 20 * mob_difficulty
 		self.hp_max = 35 * mob_difficulty
 		self.walk_chance = 33
@@ -438,7 +473,7 @@ local function random_class(self)
 		}
 
 		self.object:set_properties({
-			-- nametag = self.nametag,
+			nametag = self.nametag,
 			hp_min = self.hp_min,
 			hp_max = self.hp_max,
 			walk_chance = self.walk_chance,
@@ -458,7 +493,11 @@ local function random_class(self)
 		})
 
 	else
-		-- self.nametag = "Dwarf Paladine"
+		if (show_nametags == true) then
+			self.nametag = S("Dwarf Paladine")
+		else
+			self.nametag = ""
+		end
 		self.hp_min = 35 * mob_difficulty
 		self.hp_max = 70 * mob_difficulty
 		self.armor = 70
@@ -583,7 +622,7 @@ local function random_class(self)
 		}
 
 		self.object:set_properties({
-			-- nametag = self.nametag,
+			nametag = self.nametag,
 			hp_min = self.hp_min,
 			hp_max = self.hp_max,
 			armor = self.armor,
@@ -816,6 +855,7 @@ local function heal_over_time(self, dtime)
 					})
 
 				else
+					--print(self.given_name .. " Recovering health.")
 					self.heal_counter = 4.0
 					self.health = self.health + 1
 					self.object:set_hp(self.health)
@@ -1131,6 +1171,11 @@ mobs:register_mob("mobs_dwarves:dwarf", {
 	lava_damage = 9999,
 	suffocation = true,
 	floats = 0,
+	follow = {
+		"default:gold_lump", "default:gold_ingot", "default:mese_crystal",
+		"default:mese", "default:diamond", "default:diamondblock"
+	},
+	owner_loyal = true,
 	attack_monsters = true,
 	group_attack = true,
 	attack_type = "dogfight",
@@ -1143,7 +1188,7 @@ mobs:register_mob("mobs_dwarves:dwarf", {
 	visual = "mesh",
 	visual_size = {x = 1.1, y = 0.85},
 	collisionbox = {-0.3, -.85, -0.3, 0.3, 0.68, 0.3},
-	textures = "",
+	textures = "mobs_dwarves_dwarf.png",
 	mesh = "mobs_dwarves_character.b3d",
 	animation = {
 		stand_start = 0,
@@ -1160,7 +1205,7 @@ mobs:register_mob("mobs_dwarves:dwarf", {
 		punch_speed = 30
 	},
 
-	on_spawn = function(self)
+	after_activate = function(self, staticdata, def, dtime)
 		random_class(self)
 		self.textures = random_appearence(self.class_and_tool)
 		self.base_texture = self.textures
@@ -1174,14 +1219,19 @@ mobs:register_mob("mobs_dwarves:dwarf", {
 
 		self.given_name = random_string(math.random(2, 5))
 
+		self.nametag = minetest.colorize("white", self.given_name ..
+			" (" .. self.nametag .. ")")
+
 		self.object:set_properties({
 			heal_counter = self.heal_counter,
 			initial_hp = self.initial_hp,
 			injuried = self.injuried,
 			textures = self.textures,
 			base_texture = self.base_texture,
-			given_name = self.given_name
+			given_name = self.given_name,
+			nametag = self.nametag
 		})
+
 		return true
 	end,
 
@@ -1195,6 +1245,10 @@ mobs:register_mob("mobs_dwarves:dwarf", {
 			local msg = MESSAGE_1 .. player_name .. MESSAGE_2
 				.. self.given_name .. "."
 			minetest.chat_send_player(player_name, msg)
+		end
+
+		if mobs:feed_tame(self, clicker, 10, false, true) then
+			return
 		end
 	end,
 
@@ -1215,6 +1269,7 @@ mobs:register_mob("mobs_dwarves:dwarf", {
 		heal_over_time(self, dtime)
 		experience(self)
 	end
+
 })
 
 
@@ -1296,5 +1351,5 @@ if (minetest.settings:get("debug_log_level") == nil)
 or (minetest.settings:get("debug_log_level") == "action")
 or	(minetest.settings:get("debug_log_level") == "info")
 or (minetest.settings:get("debug_log_level") == "verbose") then
-	minetest.log("action", "[Mod] Mobs Dwarves [v0.1.1] loaded.")
+	minetest.log("action", "[Mod] Mobs Dwarves [v0.2.0] loaded.")
 end

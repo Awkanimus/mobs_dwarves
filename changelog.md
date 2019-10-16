@@ -7,7 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-	- Allow to hire a dwarf.
+	- No further feature planned.
+
+
+
+## [0.2.0] - 2019-10-16
+### Added
+
+	- Dwarves can be "tamed" using one lump/ingot/crystal of gold, mese or  
+		 diamond.
+	- Support for translations.
+	- Option to toggle dwarves digging ores and placing torces.
+	- Option to toggle hovering nametags: Given name (Dwarf class).
+
+### Changed
+
+	- License changed to EUPL v1.2
+	- mod.conf set to follow MTv5.x specifics.
+	- on_spawn function moved to after_activate.
+	- Textures have been optimized (with optipng).
+
+### Removed
+
+	- Support for MT v0.4.x
 
 
 
