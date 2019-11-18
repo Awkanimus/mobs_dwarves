@@ -1,6 +1,6 @@
 --[[
 	Mobs Dwarves - Adds dwarves.
-	Copyright © 2018-2019 Hamlet <hamlatmesehub@riseup.net>
+	Copyright © 2018, 2019 Hamlet <hamlatmesehub@riseup.net> and contributors.
 
 	Licensed under the EUPL, Version 1.2 or – as soon they will be
 	approved by the European Commission – subsequent versions of the
@@ -46,6 +46,12 @@ if (dig_ores == nil) then
 	dig_ores = true
 end
 
+-- When the mob can heal.
+local t_ALLOWED_STATES = {'stand', 'walk'}
+
+local t_HEAL_DELAY = 4 -- Seconds that must pass before healing.
+local t_HIT_POINTS = 1 -- Hit points per healing step.
+
 
 --
 -- Chat messages
@@ -87,11 +93,7 @@ local function random_class(self)
 	local class = math.random(1, 20)
 
 	if (class >= 1) and (class < 10) then
-		if (show_nametags == true) then
-			self.nametag = S("Dwarf Miner")
-		else
-			self.nametag = ""
-		end
+		self.nametag = S("Dwarf Miner")
 		self.hp_min = 20 * mob_difficulty
 		self.hp_max = 35 * mob_difficulty
 
@@ -207,11 +209,7 @@ local function random_class(self)
 		self.water_damage = dps(self, 120)
 		self.light_damage = dps(self, 300)
 		self.runaway_from = {
-			"mobs:balrog",
-			"mobs_monster:dungeon_master",
-			"mobs_monster:fireball",
-			"mobs_monster:mese_monster",
-			"mobs_monster:mese_arrow"
+			"mobs:balrog"
 		}
 
 		if (dig_ores == true) then
@@ -290,11 +288,7 @@ local function random_class(self)
 		})
 
 	elseif (class > 9) and (class < 15) then
-		if (show_nametags == true) then
-			self.nametag = S("Dwarf Soldier")
-		else
-			self.nametag = ""
-		end
+		self.nametag = S("Dwarf Soldier")
 		self.hp_min = 35 * mob_difficulty
 		self.hp_max = 50 * mob_difficulty
 		self.armor = 85
@@ -442,11 +436,7 @@ local function random_class(self)
 		})
 
 	elseif (class > 14) and (class < 20) then
-		if (show_nametags == true) then
-			self.nametag = S("Dwarf Marksman")
-		else
-			self.nametag = ""
-		end
+		self.nametag = S("Dwarf Marksman")
 		self.hp_min = 20 * mob_difficulty
 		self.hp_max = 35 * mob_difficulty
 		self.walk_chance = 33
@@ -493,11 +483,7 @@ local function random_class(self)
 		})
 
 	else
-		if (show_nametags == true) then
-			self.nametag = S("Dwarf Paladine")
-		else
-			self.nametag = ""
-		end
+		self.nametag = S("Dwarf Paladine")
 		self.hp_min = 35 * mob_difficulty
 		self.hp_max = 70 * mob_difficulty
 		self.armor = 70
@@ -805,7 +791,7 @@ local function random_appearence(class)
 		chosen_armour = golden_armours[math.random(1, 4)]
 
 	end
-	
+
 	table.insert(appearence, 1, chosen_skin)
 	table.insert(appearence, 2, chosen_armour)
 	table.insert(appearence, 3, chosen_weapon)
@@ -814,90 +800,106 @@ local function random_appearence(class)
 	return appearence
 end
 
-
-local function heal_over_time(self, dtime)
-	-- For backward compatibility
-	if (self.heal_counter == nil)
-	or (self.initial_hp == nil)
-	or (self.injuried == nil)
-	then
-		self.heal_counter = 4.0
-		-- used for health recovery
-
-		self.initial_hp = math.random(self.hp_min, self.hp_max)
-		-- used as reference when recovering health
-
-		-- used to determine whether if in need of healing
-		if (self.health == self.initial_hp) then
-			self.injuried = false
-
-		else
-			self.injuried = true
-
-		end
-
-		self.object:set_properties({
-			heal_counter = self.heal_counter,
-			initial_hp = self.initial_hp,
-			injuried = self.injuried
-		})
+local HitFlag = function(self)
+	if (self.b_Hit ~= true) then
+		self.b_Hit = true
 	end
 
-	if (self.injuried == true) then
-		if (self.state ~= "attack") and (self.state ~= "runaway") then
-			-- recover 1HP every 4 seconds
-			if (self.health < self.initial_hp) then
-				if (self.heal_counter > 0) then
-					self.heal_counter = self.heal_counter - dtime
+	if (self.f_CooldownTimer ~= 10) then
+		self.f_CooldownTimer = 10
+		-- Seconds before gaining experience.
+		-- Prevents mobs from gaining experience when hit by projectiles.
+	end
+end
 
-					self.object:set_properties({
-						heal_counter = self.heal_counter
-					})
+local SurvivedFlag = function(self)
+	if (self.i_SurvivedFights == nil) then
+		self.i_SurvivedFights = 0
+	end
+end
 
-				else
-					--print(self.given_name .. " Recovering health.")
-					self.heal_counter = 4.0
-					self.health = self.health + 1
-					self.object:set_hp(self.health)
+local HurtFlag = function(self)
+	if (self.b_Hurt == nil) then
+		if (self.health == self.max_hp) then
+			self.b_Hurt = false
 
-					self.object:set_properties({
-						heal_counter = self.heal_counter
-					})
+		else
+			self.b_Hurt = true
+		end
+	end
+end
 
-				end
+Experience = function(self, dtime)
 
-			elseif (self.health == self.initial_hp) then
-				self.injuried = false
+	-- Allows experience gain for mobs that have been directly hit.
+	if (self.b_Hit == true) and (self.attack == nil) then
+		if (self.f_CooldownTimer > 0) then
+			self.f_CooldownTimer = (self.f_CooldownTimer - dtime)
 
-				self.object:set_properties({injuried = self.injuried})
+		else
+			self.b_Hit = false
+			self.f_CooldownTimer = 10
+
+			self.i_SurvivedFights = (self.i_SurvivedFights + 1)
+			--[[
+			print(self.given_name .. " survived " ..self.i_SurvivedFights
+				.. " fight(s).")
+			--]]
+
+			if (self.damage < (8 * mob_difficulty)) then
+				self.damage = (self.damage + 1)
+			end
+
+			if (self.armor > 10) then
+				self.armor = (self.armor - 1)
 			end
 		end
 	end
 end
 
-
-local function experience(self)
-	if (self.attack == nil) and (self.engaged ~= true) then
-		return
-
-	elseif (self.attack ~= nil) and (self.engaged ~= true) then
-		self.engaged = true
-
-		self.object:set_properties({engaged = self.engaged})
-
-	elseif (self.attack == nil) and (self.engaged == true) then
-		self.engaged = false
-
-		self.object:set_properties({engaged = self.engaged})
-
-		if (self.damage < (8 * mob_difficulty)) then
-			self.damage = self.damage + 1
-			self.object:set_properties({damage = self.damage})
+local Heal = function(self, dtime, a_t_states, a_i_hp, a_f_delay, a_i_max_hp)
+	if (self.b_Hurt ~= nil) then
+		if (self.f_HealTimer == nil) then
+			self.f_HealTimer = a_f_delay
 		end
 
-		if (self.armor > 10) then
-			self.armor = self.armor - 1
-			self.object:set_properties({armor = self.armor})
+		if (self.health == a_i_max_hp) then
+			self.b_Hurt = false
+		else
+			self.b_Hurt = true
+		end
+
+		if (self.b_Hurt == true) then
+			local b_CanHeal = false
+
+			for i = 1, #a_t_states do
+				if (self.state == a_t_states[i]) then
+					b_CanHeal = true
+				end
+			end
+
+			if (b_CanHeal == true) then
+				if (self.health < a_i_max_hp) then
+					if (self.f_HealTimer > 0) then
+						self.f_HealTimer = (self.f_HealTimer - dtime)
+
+					else
+						self.f_HealTimer = a_f_delay
+						self.health = (self.health + a_i_hp)
+
+						if (self.health > a_i_max_hp) then
+							local i_Excess = (self.health - a_i_max_hp)
+							self.health = (self.health - i_Excess)
+						end
+
+						self.object:set_hp(self.health)
+						--[[
+						print(self.given_name .. " healing: " ..
+							self.health .. "/" .. a_i_max_hp)
+						--]]
+					end
+				end
+			end
 		end
 	end
 end
@@ -1154,7 +1156,7 @@ end
 --
 
 mobs:register_mob("mobs_dwarves:dwarf", {
-	nametag = "",
+	nametag = "Dwarf",
 	type = "npc",
 	hp_min = 20,
 	hp_max = 20,
@@ -1163,7 +1165,8 @@ mobs:register_mob("mobs_dwarves:dwarf", {
 	walk_velocity = 2.5,
 	run_velocity = 3.5,
 	walk_chance = 50,
-	jump = false,
+	jump = true,
+	jump_height = 1.1,
 	view_range = 10,
 	damage = 1,
 	fear_height = 2,
@@ -1176,6 +1179,8 @@ mobs:register_mob("mobs_dwarves:dwarf", {
 		"default:mese", "default:diamond", "default:diamondblock"
 	},
 	owner_loyal = true,
+	reach = 4,
+	attack_chance = 1,
 	attack_monsters = true,
 	group_attack = true,
 	attack_type = "dogfight",
@@ -1205,34 +1210,47 @@ mobs:register_mob("mobs_dwarves:dwarf", {
 		punch_speed = 30
 	},
 
-	after_activate = function(self, staticdata, def, dtime)
-		random_class(self)
-		self.textures = random_appearence(self.class_and_tool)
-		self.base_texture = self.textures
+	on_spawn = function(self)
+		if (self.nametag == 'Dwarf')
+		or (self.class == nil) -- For backward compatibility.
+		then
+			-- Set the initial 'b_Hurt' flag.
+			HurtFlag(self)
 
-		self.heal_counter = 4.0
-		self.injuried = false
+			-- Set the initial 'i_SurvivedFights' flag,
+			-- that is the experience modifier.
+			SurvivedFlag(self)
 
-		self.initial_hp = math.random(self.hp_min, self.hp_max)
+			random_class(self)
+			self.textures = random_appearence(self.class_and_tool)
+			self.base_texture = self.textures
 
-		self.object:set_hp(self.initial_hp)
+			self.class = self.nametag
+			self.given_name = random_string(math.random(2, 5))
 
-		self.given_name = random_string(math.random(2, 5))
+			self.nametag = minetest.colorize("white", self.given_name ..
+				" (" .. self.class .. ")")
 
-		self.nametag = minetest.colorize("white", self.given_name ..
-			" (" .. self.nametag .. ")")
+			self.initial_hp = math.random(self.hp_min, self.hp_max)
 
-		self.object:set_properties({
-			heal_counter = self.heal_counter,
-			initial_hp = self.initial_hp,
-			injuried = self.injuried,
-			textures = self.textures,
-			base_texture = self.base_texture,
-			given_name = self.given_name,
-			nametag = self.nametag
-		})
+			self.object:set_hp(self.initial_hp)
 
-		return true
+			self.object:set_properties({
+				textures = self.textures,
+				base_texture = self.base_texture,
+				given_name = self.given_name,
+				nametag = self.nametag
+			})
+		end
+
+		if (show_nametags == false) then
+			self.nametag = ""
+			self.object:set_properties({ nametag = self.nametag })
+		else
+			self.nametag = minetest.colorize("white", self.given_name ..
+				" (" .. self.class .. ")")
+			self.object:set_properties({ nametag = self.nametag })
+		end
 	end,
 
 	on_rightclick = function(self, clicker)
@@ -1258,16 +1276,13 @@ mobs:register_mob("mobs_dwarves:dwarf", {
 	end,
 
 	do_punch = function(self)
-		if (self.health < self.initial_hp) and (self.injuried == false) then
-			self.injuried = true
-
-			self.object:set_properties({injuried = self.injuried})
-		end
+		HitFlag(self)
 	end,
 
 	do_custom = function(self, dtime)
-		heal_over_time(self, dtime)
-		experience(self)
+		Heal(self, dtime, t_ALLOWED_STATES, t_HIT_POINTS,
+			t_HEAL_DELAY, self.initial_hp)
+		Experience(self, dtime)
 	end
 
 })
@@ -1283,7 +1298,7 @@ mobs:register_arrow("mobs_dwarves:crossbow_bolt", {
 	visual = "sprite",
 	visual_size = {x = 1, y = 1},
 	textures = {"mobs_dwarves_crossbow_bolt.png"},
-	velocity = 10,
+	velocity = 35,
 	drop = false,
 
 	hit_player = function(self, player)
@@ -1316,6 +1331,14 @@ mobs:register_arrow("mobs_dwarves:crossbow_bolt", {
 -- Spawner
 --
 
+-- Used to balance Dwarves Vs Goblins
+local i_SpawnerMultiplier = 1
+
+if (minetest.get_modpath("goblins") ~= nil) then
+	i_SpawnerMultiplier = 6
+end
+
+
 mobs:spawn({
 	name = "mobs_dwarves:dwarf",
 	nodes = {
@@ -1326,14 +1349,15 @@ mobs:spawn({
 	max_light = 13,
 	min_light = 0,
 	chance = 5000,
-	active_object_count = 2,
+	active_object_count = (2 * i_SpawnerMultiplier),
 	min_height = -31000,
 	max_height = -300
 })
 
 -- Spawn Egg
 
-mobs:register_egg("mobs_dwarves:dwarf", "Spawn Dwarf", "mobs_dwarves_icon.png")
+mobs:register_egg("mobs_dwarves:dwarf", S("Spawn Dwarf"),
+	"mobs_dwarves_icon.png")
 
 
 --
@@ -1347,9 +1371,13 @@ mobs:alias_mob("mobs:dwarf", "mobs_dwarves:dwarf")
 -- Minetest engine debug logging
 --
 
-if (minetest.settings:get("debug_log_level") == nil)
-or (minetest.settings:get("debug_log_level") == "action")
-or	(minetest.settings:get("debug_log_level") == "info")
-or (minetest.settings:get("debug_log_level") == "verbose") then
-	minetest.log("action", "[Mod] Mobs Dwarves [v0.2.0] loaded.")
+local s_LogLevel = minetest.settings:get("debug_log_level")
+
+if (s_LogLevel == nil)
+or (s_LogLevel == "action")
+or (s_LogLevel == "info")
+or (s_LogLevel == "verbose")
+then
+	s_LogLevel = nil
+	minetest.log("action", "[Mod] Mobs Dwarves [v0.2.1] loaded.")
 end

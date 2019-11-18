@@ -2,12 +2,12 @@
 ![Mobs Dwarves' screenshot](screenshot.png)  
 **_Adds dwarves._**
 
-**Version:** 0.2.0  
+**Version:** 0.2.1  
 **Source code's license:**  [EUPL v1.2][1] or later.  
 **Media (Textures, Models, Sounds) license:** [LGPL v2.1][2] - [CC BY 3.0][3] - [CC BY-SA 3.0][4] - [CC0][5] (check each subfolder)
 
 **Dependencies:** default (found in [Minetest Game][6]), mobs ([Mobs redo][7])  
-**Supported:** castle_masonry, dfcaverns, real_minerals
+**Supported:** castle_masonry, dfcaverns, goblins, real_minerals
 
 
 ### Installation

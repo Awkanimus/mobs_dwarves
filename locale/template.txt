@@ -10,3 +10,4 @@ Dwarf Miner=
 Dwarf Soldier=
 Dwarf Marksman=
 Dwarf Paladine=
+Spawn Dwarf=

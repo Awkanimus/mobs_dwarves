@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 
 
+## [0.2.1] - 2019-11-18
+### Changed
+
+	- Fixed 'stuck issue'.
+	- Fixed 'moonwalking issue' when healing.
+	- Fixed class-appearence mismatch.
+	- Fixed nametags being only partially hidden.
+	- Code improvements.
+
+
+
 ## [0.2.0] - 2019-10-16
 ### Added
 
