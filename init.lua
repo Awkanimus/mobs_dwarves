@@ -850,9 +850,17 @@ Experience = function(self, dtime)
 				self.damage = (self.damage + 1)
 			end
 
-			if (self.armor > 10) then
-				self.armor = (self.armor - 1)
+			if type(self.armor) == "table" then
+				current_armor = self.armor.fleshy or 10
+				if current_armor > 10 then
+					self.armor.fleshy = (current_armor - 1)
+				end
+			elseif type(armor) == "number" then
+				if self.armor > 10 then
+					self.armor = (self.armor - 1)
+				end
 			end
+
 		end
 	end
 end
